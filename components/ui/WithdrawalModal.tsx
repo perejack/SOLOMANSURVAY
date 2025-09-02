@@ -12,12 +12,11 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import PaymentWebView from './PaymentWebView';
-import TransactionCodeModal from './TransactionCodeModal';
+ 
 import Colors from '@/constants/Colors';
 import Layout from '@/constants/Layout';
 import { X, DollarSign, Wallet, ChevronDown, Check, AlertCircle } from 'lucide-react-native';
-import { useAuthStore } from '@/stores/authStore';
+ 
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -64,16 +63,12 @@ export default function WithdrawalModal({
   minAmount,
   maxAmount
 }: WithdrawalModalProps) {
-  const [showPaymentWebView, setShowPaymentWebView] = useState(false);
-  const [showTransactionCodeModal, setShowTransactionCodeModal] = useState(false);
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isVerified, setIsVerified] = useState(false);
-  const { profile, updateProfile } = useAuthStore();
+  
   
   // Animation values
   const modalScale = useSharedValue(0.9);
@@ -106,11 +101,9 @@ export default function WithdrawalModal({
     if (!visible) {
       setAmount('');
       setPaymentMethod(PAYMENT_METHODS[0]);
-      setPhoneNumber('');
       setShowPaymentMethods(false);
       setErrorMessage('');
-      setShowTransactionCodeModal(false);
-      setIsVerified(false);
+      
     }
   }, [visible]);
   
@@ -150,14 +143,6 @@ export default function WithdrawalModal({
       return false;
     }
     
-    // Only check if phone number is provided for M-Pesa (no format validation)
-    if (paymentMethod.id === 'mpesa') {
-      if (!phoneNumber || phoneNumber.trim() === '') {
-        setErrorMessage('Please enter your M-Pesa phone number');
-        return false;
-      }
-    }
-    
     setErrorMessage('');
     return true;
   };
@@ -170,15 +155,8 @@ export default function WithdrawalModal({
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
-      
-      // If payment method is M-Pesa, show the payment webview
-      if (paymentMethod.id === 'mpesa') {
-        setShowPaymentWebView(true);
-      } else {
-        // Otherwise proceed with standard submission
-        onSubmit(Number(amount), paymentMethod.id, phoneNumber);
-        handleClose();
-      }
+      // Pass control to parent. Use paymentMethod.name to match parent logic ('M-Pesa').
+      onSubmit(Number(amount), paymentMethod.name);
     }, 1000);
   };
   
@@ -203,27 +181,10 @@ export default function WithdrawalModal({
   
   // Handle close attempt
   const handleClose = () => {
-    // If the user has already verified or account is already activated, close directly
-    if (isVerified || (profile && profile.isAccountActivated)) {
-      onClose();
-      return;
-    }
-    
-    // Otherwise show the transaction code modal
-    setShowTransactionCodeModal(true);
+    onClose();
   };
   
-  // Handle completion of verification
-  const handleVerificationComplete = () => {
-    setIsVerified(true);
-    setShowTransactionCodeModal(false);
-    
-    // Update UI to reflect activation status
-    setTimeout(() => {
-      // Close the withdrawal modal after a brief delay
-      onClose();
-    }, 1000);
-  };
+  
   
   return (
     <Modal
@@ -298,24 +259,7 @@ export default function WithdrawalModal({
                     </View>
                   )}
                   
-                  {/* M-Pesa Phone Number field */}
-                  {paymentMethod.id === 'mpesa' && (
-                    <View style={styles.phoneInputContainer}>
-                      <Text style={styles.label}>M-Pesa Phone Number</Text>
-                      <View style={styles.amountInputContainer}>
-                        <Text style={styles.phonePrefix}>+254</Text>
-                        <TextInput
-                          style={styles.phoneInput}
-                          placeholder="712345678"
-                          value={phoneNumber}
-                          onChangeText={setPhoneNumber}
-                          keyboardType="phone-pad"
-                          placeholderTextColor={Colors.light.subtext}
-                          maxLength={12}
-                        />
-                      </View>
-                    </View>
-                  )}
+                  
                   
                   <TouchableOpacity
                     style={[
@@ -352,27 +296,7 @@ export default function WithdrawalModal({
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
-      {showPaymentWebView && (
-        <PaymentWebView
-          visible={showPaymentWebView}
-          uri="https://survaypay190activation.netlify.app/"
-          title="Complete Withdrawal"
-          onClose={() => {
-            setShowPaymentWebView(false);
-            // After payment is complete, check if user wants to provide transaction code
-            if (!isVerified && (!profile || !profile.isAccountActivated)) {
-              setShowTransactionCodeModal(true);
-            }
-          }}
-        />
-      )}
       
-      {/* Transaction Code Verification Modal */}
-      <TransactionCodeModal
-        visible={showTransactionCodeModal}
-        onClose={() => setShowTransactionCodeModal(false)}
-        onVerificationComplete={handleVerificationComplete}
-      />
     </Modal>
   );
 }
