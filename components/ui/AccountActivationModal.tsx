@@ -9,9 +9,9 @@ import {
   Dimensions,
   ScrollView,
   TextInput,
-  Clipboard,
   Alert
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import Colors from '@/constants/Colors';
 import Layout from '@/constants/Layout';
 import { X, Shield, Check, AlertCircle, Copy, CheckCircle } from 'lucide-react-native';
@@ -57,8 +57,12 @@ export default function AccountActivationModal({ visible, onClose, onActivate, c
 
   // Copy till number to clipboard
   const copyTillNumber = async () => {
-    await Clipboard.setString('5619610');
-    Alert.alert('Copied!', 'Till number copied to clipboard');
+    try {
+      await Clipboard.setStringAsync('5619610');
+      Alert.alert('Copied!', 'Till number copied to clipboard');
+    } catch (e) {
+      Alert.alert('Copy failed', 'Please copy the till number manually: 5619610');
+    }
   };
 
   // Reset modal state when closing
