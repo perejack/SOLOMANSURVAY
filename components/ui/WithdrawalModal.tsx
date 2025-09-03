@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
   TextInput,
-  Dimensions,
+  useWindowDimensions,
   ActivityIndicator,
   Alert
 } from 'react-native';
@@ -26,19 +26,9 @@ import Animated, {
   withSequence
 } from 'react-native-reanimated';
 
-// Get screen dimensions for responsive sizing
-const { width, height } = Dimensions.get('window');
-const isSmallScreen = width < 360;
-
-// Helper function for responsive font sizes
-const getFontSize = (baseSize: number): number => {
-  return isSmallScreen ? baseSize - 2 : baseSize;
-};
-
-// Helper function for responsive spacing
-const getSpacing = (baseSpacing: number): number => {
-  return isSmallScreen ? baseSpacing * 0.8 : baseSpacing;
-};
+// Helper functions for responsive design (static to avoid SSR mismatch)
+const getFontSize = (baseSize: number): number => baseSize;
+const getSpacing = (baseSpacing: number): number => baseSpacing;
 
 const PAYMENT_METHODS = [
   { id: 'mpesa', name: 'M-Pesa' },
@@ -63,6 +53,7 @@ export default function WithdrawalModal({
   minAmount,
   maxAmount
 }: WithdrawalModalProps) {
+  const { height, width } = useWindowDimensions();
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
@@ -196,7 +187,7 @@ export default function WithdrawalModal({
       <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <Animated.View style={[styles.modalContainer, modalAnimatedStyle]}>
+            <Animated.View style={[styles.modalContainer, { maxHeight: height * 0.9 }, modalAnimatedStyle]}>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                 <X size={24} color={Colors.light.text} />
               </TouchableOpacity>
@@ -312,7 +303,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
     maxWidth: 500,
-    maxHeight: height * 0.9,
+    // maxHeight applied inline based on current window dimensions
     backgroundColor: Colors.light.background,
     borderRadius: Layout.borderRadius.large,
     overflow: 'hidden',

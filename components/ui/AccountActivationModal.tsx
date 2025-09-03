@@ -6,11 +6,11 @@ import {
   Modal, 
   TouchableOpacity, 
   TouchableWithoutFeedback,
-  Dimensions,
   ScrollView,
   TextInput,
   Alert,
-  Platform
+  Platform,
+  useWindowDimensions
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import Colors from '@/constants/Colors';
@@ -25,26 +25,9 @@ import Animated, {
   Easing
 } from 'react-native-reanimated';
 
-// Get screen dimensions for responsive sizing (with SSR guard)
-const getScreenDimensions = () => {
-  if (Platform.OS === 'web' && typeof window === 'undefined') {
-    return { width: 400, height: 800 }; // Default dimensions for SSR
-  }
-  return Dimensions.get('window');
-};
-
-const { width, height } = getScreenDimensions();
-const isSmallScreen = width < 360;
-
-// Helper function for responsive font sizes
-const getFontSize = (baseSize: number): number => {
-  return isSmallScreen ? baseSize - 2 : baseSize;
-};
-
-// Helper function for responsive spacing
-const getSpacing = (baseSpacing: number): number => {
-  return isSmallScreen ? baseSpacing * 0.8 : baseSpacing;
-};
+// Static helpers to avoid SSR-dependent variability in StyleSheet
+const getFontSize = (baseSize: number): number => baseSize;
+const getSpacing = (baseSpacing: number): number => baseSpacing;
 
 interface AccountActivationModalProps {
   visible: boolean;
@@ -54,6 +37,7 @@ interface AccountActivationModalProps {
 }
 
 export default function AccountActivationModal({ visible, onClose, onActivate, currentBalance }: AccountActivationModalProps) {
+  const { height } = useWindowDimensions();
   const [paymentStep, setPaymentStep] = useState<'activation' | 'mpesa-payment' | 'transaction-code' | 'success'>('activation');
   const [transactionCode, setTransactionCode] = useState('');
   const [isCodeValid, setIsCodeValid] = useState(false);
@@ -118,8 +102,8 @@ export default function AccountActivationModal({ visible, onClose, onActivate, c
     transform: [{ rotateY: `${iconRotation.value}deg` }],
   }));
   
-  // Animation for benefits
-  const getBenefitAnimatedStyle = (index: number) => useAnimatedStyle(() => ({
+  // Animation for benefits (declare hook unconditionally at top level)
+  const benefitsAnimatedStyle = useAnimatedStyle(() => ({
     opacity: benefitOpacity.value,
     transform: [{ scale: benefitScale.value }],
   }));
@@ -163,7 +147,7 @@ export default function AccountActivationModal({ visible, onClose, onActivate, c
               <Text style={styles.alertText}>Your account is inactive. Activate now to complete your withdrawal to M-Pesa.</Text>
             </View>
             
-            <Animated.View style={[styles.benefitsContainer, getBenefitAnimatedStyle(0)]}>
+            <Animated.View style={[styles.benefitsContainer, benefitsAnimatedStyle]}>
               <Text style={styles.benefitsTitle}>Benefits of Activation:</Text>
               <View style={styles.benefitItem}>
                 <Check size={20} color={Colors.light.success} />
@@ -337,7 +321,7 @@ export default function AccountActivationModal({ visible, onClose, onActivate, c
       <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <Animated.View style={[styles.modalContainer, modalAnimatedStyle]}>
+            <Animated.View style={[styles.modalContainer, { maxHeight: height * 0.9 }, modalAnimatedStyle]}>
               <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
                 <X size={24} color={Colors.light.text} />
               </TouchableOpacity>
