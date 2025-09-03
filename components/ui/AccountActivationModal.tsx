@@ -9,7 +9,8 @@ import {
   Dimensions,
   ScrollView,
   TextInput,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import Colors from '@/constants/Colors';
@@ -24,8 +25,15 @@ import Animated, {
   Easing
 } from 'react-native-reanimated';
 
-// Get screen dimensions for responsive sizing
-const { width, height } = Dimensions.get('window');
+// Get screen dimensions for responsive sizing (with SSR guard)
+const getScreenDimensions = () => {
+  if (Platform.OS === 'web' && typeof window === 'undefined') {
+    return { width: 400, height: 800 }; // Default dimensions for SSR
+  }
+  return Dimensions.get('window');
+};
+
+const { width, height } = getScreenDimensions();
 const isSmallScreen = width < 360;
 
 // Helper function for responsive font sizes
@@ -49,6 +57,12 @@ export default function AccountActivationModal({ visible, onClose, onActivate, c
   const [paymentStep, setPaymentStep] = useState<'activation' | 'mpesa-payment' | 'transaction-code' | 'success'>('activation');
   const [transactionCode, setTransactionCode] = useState('');
   const [isCodeValid, setIsCodeValid] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Handle client-side mounting for SSR compatibility
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Validate transaction code
   useEffect(() => {
@@ -58,8 +72,13 @@ export default function AccountActivationModal({ visible, onClose, onActivate, c
   // Copy till number to clipboard
   const copyTillNumber = async () => {
     try {
-      await Clipboard.setStringAsync('5619610');
-      Alert.alert('Copied!', 'Till number copied to clipboard');
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText('5619610');
+        Alert.alert('Copied!', 'Till number copied to clipboard');
+      } else {
+        await Clipboard.setStringAsync('5619610');
+        Alert.alert('Copied!', 'Till number copied to clipboard');
+      }
     } catch (e) {
       Alert.alert('Copy failed', 'Please copy the till number manually: 5619610');
     }
@@ -302,6 +321,11 @@ export default function AccountActivationModal({ visible, onClose, onActivate, c
         return null;
     }
   };
+
+  // Don't render on server-side to prevent hydration mismatch
+  if (Platform.OS === 'web' && !isMounted) {
+    return null;
+  }
 
   return (
     <Modal
