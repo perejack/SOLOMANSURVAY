@@ -6,10 +6,10 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   TouchableWithoutFeedback,
   Image,
-  Platform
+  Platform,
+  useWindowDimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import PaymentWebView from './PaymentWebView';
@@ -28,23 +28,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// Get screen dimensions for responsive sizing
-const { width, height } = Dimensions.get('window');
-const isSmallScreen = width < 360;
-const isNarrowScreen = width < 400;
-
-// Helper functions for responsive design
-const getFontSize = (baseSize: number): number => {
-  if (isSmallScreen) return baseSize - 2;
-  if (isNarrowScreen) return baseSize - 1;
-  return baseSize;
-};
-
-const getSpacing = (baseSpacing: number): number => {
-  if (isSmallScreen) return baseSpacing * 0.7;
-  if (isNarrowScreen) return baseSpacing * 0.85;
-  return baseSpacing;
-};
+// Helper functions for responsive design (static to avoid SSR mismatch)
+const getFontSize = (baseSize: number): number => baseSize;
+const getSpacing = (baseSpacing: number): number => baseSpacing;
 
 // Types of modals we can show
 enum ModalType {
@@ -70,6 +56,7 @@ export default function PackagesModal({
   initialModalType = ModalType.PREMIUM_SURVEY_NOTICE
 }: PackagesModalProps) {
   const router = useRouter();
+  const { height, width } = useWindowDimensions();
   const [showPremiumPaymentWebView, setShowPremiumPaymentWebView] = useState(false);
   const [showElitePaymentWebView, setShowElitePaymentWebView] = useState(false);
   const [showPremiumTransactionModal, setShowPremiumTransactionModal] = useState(false);
@@ -248,7 +235,7 @@ export default function PackagesModal({
         </Text>
         
         <ScrollView 
-          style={styles.packagesScrollView}
+          style={[styles.packagesScrollView, { maxHeight: height * 0.7 }]}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.packagesScrollContent}
         >
@@ -376,7 +363,7 @@ export default function PackagesModal({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={styles.modalContainer}>
+            <View style={[styles.modalContainer, { maxHeight: height * 0.9 }]}>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <X size={24} color="#6B7280" />
               </TouchableOpacity>
@@ -449,7 +436,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
     maxWidth: 500,
-    maxHeight: height * 0.9,
+    // maxHeight applied inline based on current window dimensions
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     overflow: 'hidden',
@@ -578,7 +565,7 @@ const styles = StyleSheet.create({
   },
   packagesScrollView: {
     width: '100%',
-    maxHeight: height * 0.7,
+    // maxHeight applied inline based on current window dimensions
   },
   packagesScrollContent: {
     paddingBottom: getSpacing(24),

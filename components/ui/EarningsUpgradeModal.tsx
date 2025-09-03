@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
-  Dimensions,
+  useWindowDimensions,
   Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -23,24 +23,13 @@ import Animated, {
   withSequence
 } from 'react-native-reanimated';
 
-// Get screen dimensions for responsive sizing
-const { width, height } = Dimensions.get('window');
-const isSmallScreen = width < 360; // Extra small phones need special handling
-const isNarrowScreen = width < 400; // For slightly larger but still narrow phones
+// Responsive flags derived at render via useWindowDimensions to avoid SSR mismatches
+// Note: base styles remain static; only critical height usage is applied inline.
 
-// Helper function for responsive font sizes
-const getFontSize = (baseSize: number): number => {
-  if (isSmallScreen) return baseSize - 2;
-  if (isNarrowScreen) return baseSize - 1;
-  return baseSize;
-};
-
-// Helper function for responsive spacing
-const getSpacing = (baseSpacing: number): number => {
-  if (isSmallScreen) return baseSpacing * 0.7;
-  if (isNarrowScreen) return baseSpacing * 0.85;
-  return baseSpacing;
-};
+// Keep helper functions but they now rely on module-scope flags no longer set.
+// We will preserve existing static styles and use inline overrides for height only.
+const getFontSize = (baseSize: number): number => baseSize;
+const getSpacing = (baseSpacing: number): number => baseSpacing;
 
 interface EarningsUpgradeModalProps {
   visible: boolean;
@@ -60,6 +49,13 @@ export default function EarningsUpgradeModal({
   onContinueBasic
 }: EarningsUpgradeModalProps) {
   const router = useRouter();
+  const { height, width } = useWindowDimensions();
+  const isSmallScreen = width < 360;
+  const spacingBase = isSmallScreen ? Layout.spacing.m : Layout.spacing.l;
+  const smallPadding = isSmallScreen ? Layout.spacing.s : Layout.spacing.m;
+  const lockSize = isSmallScreen ? 80 : 100;
+  const balanceAmountFontSize = isSmallScreen ? 24 : 28;
+  const upgradeButtonTextSize = isSmallScreen ? 16 : 18;
   
   const contentOpacity = useSharedValue(0);
   const contentTranslateY = useSharedValue(50);
@@ -115,22 +111,30 @@ export default function EarningsUpgradeModal({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <Animated.View style={[styles.modalContainer, contentAnimatedStyle]}>
+            <Animated.View style={[
+              styles.modalContainer,
+              { maxHeight: height * 0.9 },
+              contentAnimatedStyle,
+            ]}>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <X size={24} color={Colors.light.text} />
               </TouchableOpacity>
               
               <ScrollView 
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[styles.scrollContent, { padding: spacingBase }]}
               >
-                <Animated.View style={[styles.lockContainer, lockAnimatedStyle]}>
+                <Animated.View style={[
+                  styles.lockContainer,
+                  { width: lockSize, height: lockSize, borderRadius: lockSize / 2 },
+                  lockAnimatedStyle
+                ]}>
                   <LockIcon size={60} color={Colors.light.accent} />
                 </Animated.View>
                 
                 <Text style={styles.title}>Unlock Full Earnings Access</Text>
                 
-                <Text style={styles.subtitle}>
+                <Text style={[styles.subtitle, { marginBottom: spacingBase }]}>
                   Upgrade your account to access premium features:
                 </Text>
                 
@@ -158,7 +162,7 @@ export default function EarningsUpgradeModal({
               
               <View style={styles.balanceContainer}>
                 <Text style={styles.balanceTitle}>Your current balance:</Text>
-                <Text style={styles.balanceAmount}>KES {currentBalance.toFixed(2)}</Text>
+                <Text style={[styles.balanceAmount, { fontSize: balanceAmountFontSize }]}>KES {currentBalance.toFixed(2)}</Text>
                 <Text style={styles.balanceNote}>
                   {currentBalance < withdrawalThreshold 
                     ? `You need KES ${(withdrawalThreshold - currentBalance).toFixed(2)} more to withdraw.`
@@ -167,18 +171,18 @@ export default function EarningsUpgradeModal({
               </View>
               
               <TouchableOpacity
-                style={styles.upgradeButton}
+                style={[styles.upgradeButton, { paddingVertical: spacingBase }]}
                 onPress={onUpgrade}
                 activeOpacity={0.8}
               >
-                <Text style={styles.upgradeButtonText}>
+                <Text style={[styles.upgradeButtonText, { fontSize: upgradeButtonTextSize }]}>
                   Upgrade Account
                 </Text>
                 <ArrowRight size={isSmallScreen ? 20 : 24} color="#FFFFFF" />
               </TouchableOpacity>
               
               <TouchableOpacity
-                style={styles.basicButton}
+                style={[styles.basicButton, { paddingVertical: smallPadding }]}
                 onPress={onContinueBasic}
                 activeOpacity={0.8}
               >
@@ -210,7 +214,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
     maxWidth: 500,
-    maxHeight: height * 0.9,
+    // maxHeight applied inline based on current window dimensions
     backgroundColor: Colors.light.background,
     borderRadius: Layout.borderRadius.large,
     padding: 0, // Remove padding since we'll use ScrollView
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   scrollContent: {
-    padding: getSpacing(isSmallScreen ? Layout.spacing.m : Layout.spacing.l),
+    padding: Layout.spacing.l,
     paddingBottom: getSpacing(Layout.spacing.xl),
     alignItems: 'center',
   },
@@ -242,9 +246,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lockContainer: {
-    width: isSmallScreen ? 80 : 100,
-    height: isSmallScreen ? 80 : 100,
-    borderRadius: isSmallScreen ? 40 : 50,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: Colors.light.accent + '10',
     justifyContent: 'center',
     alignItems: 'center',
@@ -264,7 +268,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     fontSize: getFontSize(16),
     color: Colors.light.subtext,
-    marginBottom: isSmallScreen ? Layout.spacing.m : Layout.spacing.l,
+    marginBottom: Layout.spacing.l,
     textAlign: 'center',
   },
   featuresContainer: {
@@ -290,7 +294,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: Colors.light.primary + '15',
     borderRadius: Layout.borderRadius.medium,
-    padding: getSpacing(isSmallScreen ? Layout.spacing.m : Layout.spacing.l),
+    padding: getSpacing(Layout.spacing.l),
     marginVertical: getSpacing(Layout.spacing.m),
     alignItems: 'center',
     borderWidth: 1,
@@ -304,7 +308,7 @@ const styles = StyleSheet.create({
   },
   balanceAmount: {
     fontFamily: 'Poppins-Bold',
-    fontSize: getFontSize(isSmallScreen ? 24 : 28),
+    fontSize: getFontSize(28),
     color: Colors.light.primary,
     marginBottom: getSpacing(Layout.spacing.s),
   },
@@ -320,7 +324,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     backgroundColor: '#1E88E5', // Brighter blue for better visibility
-    paddingVertical: getSpacing(isSmallScreen ? Layout.spacing.m : Layout.spacing.l),
+    paddingVertical: getSpacing(Layout.spacing.l),
     borderRadius: Layout.borderRadius.medium,
     marginVertical: getSpacing(Layout.spacing.m),
     // Make button pop with shadow
@@ -333,13 +337,13 @@ const styles = StyleSheet.create({
   },
   upgradeButtonText: {
     fontFamily: 'Poppins-SemiBold',
-    fontSize: getFontSize(isSmallScreen ? 16 : 18),
+    fontSize: getFontSize(18),
     color: '#FFFFFF',
     marginRight: getSpacing(Layout.spacing.s),
   },
   basicButton: {
     width: '100%',
-    paddingVertical: getSpacing(isSmallScreen ? Layout.spacing.s : Layout.spacing.m),
+    paddingVertical: getSpacing(Layout.spacing.m),
     borderWidth: 1,
     borderColor: Colors.light.border,
     borderRadius: Layout.borderRadius.medium,

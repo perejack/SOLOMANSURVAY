@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "expo start",
-    "web": "expo start --web --config web-build-config.js",
+    "web": "expo start --web",
     "build:web": "expo export --platform web",
     "lint": "expo lint"
   },

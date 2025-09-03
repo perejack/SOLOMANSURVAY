@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
-  Dimensions,
+  useWindowDimensions,
   Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -24,24 +24,9 @@ import Animated, {
   Easing
 } from 'react-native-reanimated';
 
-// Get screen dimensions for responsive sizing
-const { width, height } = Dimensions.get('window');
-const isSmallScreen = width < 360; // Extra small phones need special handling
-const isNarrowScreen = width < 400; // For slightly larger but still narrow phones
-
-// Helper function for responsive font sizes
-const getFontSize = (baseSize: number): number => {
-  if (isSmallScreen) return baseSize - 2;
-  if (isNarrowScreen) return baseSize - 1;
-  return baseSize;
-};
-
-// Helper function for responsive spacing
-const getSpacing = (baseSpacing: number): number => {
-  if (isSmallScreen) return baseSpacing * 0.7;
-  if (isNarrowScreen) return baseSpacing * 0.85;
-  return baseSpacing;
-};
+// Helper functions become identity to avoid module-scope responsive flags
+const getFontSize = (baseSize: number): number => baseSize;
+const getSpacing = (baseSpacing: number): number => baseSpacing;
 
 interface PremiumUpgradeModalProps {
   visible: boolean;
@@ -59,6 +44,8 @@ export default function PremiumUpgradeModal({
   withdrawalThreshold
 }: PremiumUpgradeModalProps) {
   const router = useRouter();
+  const { height, width } = useWindowDimensions();
+  const isSmallScreen = width < 360;
   
   // Animation values
   const contentTranslateY = useSharedValue(100);
@@ -113,7 +100,7 @@ export default function PremiumUpgradeModal({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <Animated.View style={[styles.modalContainer, contentAnimatedStyle]}>
+            <Animated.View style={[styles.modalContainer, { maxHeight: height * 0.9 }, contentAnimatedStyle]}>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                 <X size={24} color={Colors.light.text} />
               </TouchableOpacity>
@@ -122,8 +109,12 @@ export default function PremiumUpgradeModal({
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
               >
-                <Animated.View style={[styles.crownContainer, crownAnimatedStyle]}>
-                  <Crown size={60} color="#FFD700" />
+                <Animated.View style={[
+                  styles.crownContainer,
+                  isSmallScreen ? { width: 100, height: 100, borderRadius: 50 } : { width: 120, height: 120, borderRadius: 60 },
+                  crownAnimatedStyle
+                ]}>
+                  <Crown size={isSmallScreen ? 56 : 60} color="#FFD700" />
                 </Animated.View>
                 
                 <Text style={styles.title}>Premium Account Required</Text>
@@ -196,7 +187,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     width: '100%',
     maxWidth: 500,
-    maxHeight: height * 0.9,
+    // maxHeight applied inline based on current window dimensions
     backgroundColor: Colors.light.background,
     borderRadius: Layout.borderRadius.large,
     padding: 0,
@@ -210,7 +201,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   scrollContent: {
-    padding: getSpacing(isSmallScreen ? Layout.spacing.m : Layout.spacing.l),
+    padding: getSpacing(Layout.spacing.l),
     paddingBottom: getSpacing(Layout.spacing.xl),
     alignItems: 'center',
   },
@@ -228,9 +219,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   crownContainer: {
-    width: isSmallScreen ? 100 : 120,
-    height: isSmallScreen ? 100 : 120,
-    borderRadius: isSmallScreen ? 50 : 60,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: 'rgba(255, 215, 0, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -256,7 +247,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'rgba(255, 215, 0, 0.1)',
     borderRadius: Layout.borderRadius.medium,
-    padding: getSpacing(isSmallScreen ? Layout.spacing.m : Layout.spacing.l),
+    padding: getSpacing(Layout.spacing.l),
     marginBottom: getSpacing(Layout.spacing.l),
     alignItems: 'center',
     borderWidth: 1,
@@ -270,7 +261,7 @@ const styles = StyleSheet.create({
   },
   balanceAmount: {
     fontFamily: 'Poppins-Bold',
-    fontSize: getFontSize(isSmallScreen ? 24 : 28),
+    fontSize: getFontSize(28),
     color: '#FFD700',
     marginBottom: getSpacing(Layout.spacing.s),
   },
@@ -309,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     backgroundColor: '#FFD700',
-    paddingVertical: getSpacing(isSmallScreen ? Layout.spacing.m : Layout.spacing.l),
+    paddingVertical: getSpacing(Layout.spacing.l),
     borderRadius: Layout.borderRadius.medium,
     marginVertical: getSpacing(Layout.spacing.m),
     // Make button pop with shadow
@@ -321,7 +312,7 @@ const styles = StyleSheet.create({
   },
   upgradeButtonText: {
     fontFamily: 'Poppins-Bold',
-    fontSize: getFontSize(isSmallScreen ? 16 : 18),
+    fontSize: getFontSize(18),
     color: '#000000',
     marginRight: getSpacing(Layout.spacing.s),
   },
