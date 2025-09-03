@@ -234,80 +234,96 @@ export default function EarningsScreen() {
       <Header title="Earnings" />
       
       {/* Withdrawal threshold modal */}
-      <Modal
-        visible={showThresholdModal}
-        onClose={closeThresholdModal}
-        title="Withdrawal Threshold"
-        message="You need at least KES 750 to withdraw funds. Keep completing surveys to reach the minimum withdrawal amount!"
-        buttonText="Got it"
-        type="warning"
-      />
+      {showThresholdModal && (
+        <Modal
+          visible={showThresholdModal}
+          onClose={closeThresholdModal}
+          title="Withdrawal Threshold"
+          message="You need at least KES 750 to withdraw funds. Keep completing surveys to reach the minimum withdrawal amount!"
+          buttonText="Got it"
+          type="warning"
+        />
+      )}
       
       {/* Standard Earnings Upgrade Modal */}
-      <EarningsUpgradeModal
-        visible={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        currentBalance={currentBalance}
-        withdrawalThreshold={750}
-        onUpgrade={handleUpgradeClick}
-        onContinueBasic={handleContinueBasic}
-      />
+      {showUpgradeModal && (
+        <EarningsUpgradeModal
+          visible={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentBalance={currentBalance}
+          withdrawalThreshold={750}
+          onUpgrade={handleUpgradeClick}
+          onContinueBasic={handleContinueBasic}
+        />
+      )}
       
       {/* Account Activation Modal - for users who have only completed basic surveys */}
-      <AccountActivationModal
-        visible={showActivationModal}
-        onClose={() => setShowActivationModal(false)}
-        onActivate={handleActivateAccount}
-        currentBalance={currentBalance}
-      />
+      {showActivationModal && (
+        <AccountActivationModal
+          visible={showActivationModal}
+          onClose={() => setShowActivationModal(false)}
+          onActivate={handleActivateAccount}
+          currentBalance={currentBalance}
+        />
+      )}
       
       {/* Premium Upgrade Modal - for users who have attempted premium surveys */}
-      <PremiumUpgradeModal
-        visible={showPremiumUpgradeModal}
-        onClose={() => setShowPremiumUpgradeModal(false)}
-        onUpgrade={handleUpgradeClick}
-        currentBalance={currentBalance}
-        withdrawalThreshold={750}
-      />
+      {showPremiumUpgradeModal && (
+        <PremiumUpgradeModal
+          visible={showPremiumUpgradeModal}
+          onClose={() => setShowPremiumUpgradeModal(false)}
+          onUpgrade={handleUpgradeClick}
+          currentBalance={currentBalance}
+          withdrawalThreshold={750}
+        />
+      )}
       
       {/* Regular Packages Modal (for surveys) */}
-      <PackagesModal
-        visible={showPackagesModal}
-        onClose={() => setShowPackagesModal(false)}
-        onContinueBasic={handleContinueBasic}
-        onUpgradeLite={handleUpgradeLite}
-        onUpgradeElite={handleUpgradeClassic}
-      />
+      {showPackagesModal && (
+        <PackagesModal
+          visible={showPackagesModal}
+          onClose={() => setShowPackagesModal(false)}
+          onContinueBasic={handleContinueBasic}
+          onUpgradeLite={handleUpgradeLite}
+          onUpgradeElite={handleUpgradeClassic}
+        />
+      )}
       
       {/* Withdrawal Packages Modal (goes directly to packages) */}
-      <WithdrawalPackagesModal
-        visible={showWithdrawalPackagesModal}
-        onClose={() => setShowWithdrawalPackagesModal(false)}
-        onContinueBasic={handleContinueBasic}
-        onUpgradePremium={handleUpgradeLite}
-        onUpgradeElite={handleUpgradeClassic}
-      />
+      {showWithdrawalPackagesModal && (
+        <WithdrawalPackagesModal
+          visible={showWithdrawalPackagesModal}
+          onClose={() => setShowWithdrawalPackagesModal(false)}
+          onContinueBasic={handleContinueBasic}
+          onUpgradePremium={handleUpgradeLite}
+          onUpgradeElite={handleUpgradeClassic}
+        />
+      )}
       
       {/* Withdrawal Modal */}
-      <WithdrawalModal
-        visible={showWithdrawalModal}
-        onClose={() => setShowWithdrawalModal(false)}
-        onSubmit={handleWithdrawalSubmit}
-        currentBalance={currentBalance}
-        minAmount={750}
-        maxAmount={currentBalance}
-      />
+      {showWithdrawalModal && (
+        <WithdrawalModal
+          visible={showWithdrawalModal}
+          onClose={() => setShowWithdrawalModal(false)}
+          onSubmit={handleWithdrawalSubmit}
+          currentBalance={currentBalance}
+          minAmount={750}
+          maxAmount={currentBalance}
+        />
+      )}
       
       {/* Withdrawal Limit Upgrade Modal */}
-      <WithdrawalLimitModal
-        visible={showWithdrawalLimitModal}
-        onClose={() => setShowWithdrawalLimitModal(false)}
-        onUpgrade={() => {
-          setShowWithdrawalLimitModal(false);
-          setShowWithdrawalPackagesModal(true);
-        }}
-        currentBalance={currentBalance}
-      />
+      {showWithdrawalLimitModal && (
+        <WithdrawalLimitModal
+          visible={showWithdrawalLimitModal}
+          onClose={() => setShowWithdrawalLimitModal(false)}
+          onUpgrade={() => {
+            setShowWithdrawalLimitModal(false);
+            setShowWithdrawalPackagesModal(true);
+          }}
+          currentBalance={currentBalance}
+        />
+      )}
       
       <ScrollView
         showsVerticalScrollIndicator={false}

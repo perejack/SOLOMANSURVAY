@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -97,6 +97,16 @@ const Modal: React.FC<ModalProps> = ({
     onClose();
   };
 
+  // Guard against SSR hydration mismatch on web: only render after mount
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (Platform.OS === 'web' && !isMounted) {
+    return null;
+  }
+
   return (
     <RNModal
       transparent
@@ -104,46 +114,93 @@ const Modal: React.FC<ModalProps> = ({
       animationType="none"
       onRequestClose={handleClose}
     >
-      <BlurView intensity={30} style={styles.backdrop}>
-        <Animated.View
-          style={[
-            styles.container,
-            {
-              opacity: opacityAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <View style={[styles.header, { backgroundColor: getTypeColor() }]}>
-            <Text style={styles.title}>{title}</Text>
-            {showCloseButton && (
-              <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                <Text style={styles.closeText}>×</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <View style={styles.content}>
-            {children ? (
-              children
-            ) : (
-              <>
-                <Text style={styles.message}>{message}</Text>
-                <TouchableOpacity
-                  style={[styles.button, { backgroundColor: getTypeColor() }]}
-                  onPress={handleClose}
-                >
-                  <Text style={styles.buttonText}>{buttonText}</Text>
+      {Platform.OS === 'web' ? (
+        <View style={styles.backdrop}>
+          <Animated.View
+            style={[
+              styles.container,
+              {
+                opacity: opacityAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <View style={[styles.header, { backgroundColor: getTypeColor() }]}>
+              <Text style={styles.title}>{title}</Text>
+              {showCloseButton && (
+                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                  <Text style={styles.closeText}>×</Text>
                 </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </Animated.View>
-      </BlurView>
+              )}
+            </View>
+            <View style={styles.content}>
+              {children ? (
+                children
+              ) : (
+                <>
+                  <Text style={styles.message}>{message}</Text>
+                  <TouchableOpacity
+                    style={[styles.button, { backgroundColor: getTypeColor() }]}
+                    onPress={handleClose}
+                  >
+                    <Text style={styles.buttonText}>{buttonText}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </Animated.View>
+        </View>
+      ) : (
+        <BlurView intensity={30} style={styles.backdrop}>
+          <Animated.View
+            style={[
+              styles.container,
+              {
+                opacity: opacityAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <View style={[styles.header, { backgroundColor: getTypeColor() }]}>
+              <Text style={styles.title}>{title}</Text>
+              {showCloseButton && (
+                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                  <Text style={styles.closeText}>×</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            <View style={styles.content}>
+              {children ? (
+                children
+              ) : (
+                <>
+                  <Text style={styles.message}>{message}</Text>
+                  <TouchableOpacity
+                    style={[styles.button, { backgroundColor: getTypeColor() }]}
+                    onPress={handleClose}
+                  >
+                    <Text style={styles.buttonText}>{buttonText}</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </Animated.View>
+        </BlurView>
+      )}
     </RNModal>
   );
 };
 
-const { width } = Dimensions.get('window');
+// SSR-safe Dimensions: provide defaults when window is unavailable
+const getWindowWidth = () => {
+  // @ts-ignore - Platform is available from react-native
+  if (Platform.OS === 'web' && typeof window === 'undefined') {
+    return 1024; // sensible default for SSR
+  }
+  return Dimensions.get('window').width;
+};
+
+const width = getWindowWidth();
 
 const styles = StyleSheet.create({
   backdrop: {

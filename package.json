@@ -19,7 +19,7 @@
     "@supabase/supabase-js": "^2.49.8",
     "crypto-browserify": "^3.12.1",
     "expo": "~52.0.46",
-    "expo-blur": "^14.0.3",
+    "expo-blur": "^14.1.5",
     "expo-camera": "^16.0.18",
     "expo-clipboard": "^7.1.5",
     "expo-constants": "~17.0.8",
