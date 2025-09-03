@@ -31,7 +31,7 @@ interface PaymentWebViewProps {
 const PaymentWebView: React.FC<PaymentWebViewProps> = ({
   visible,
   onClose,
-  uri = "https://survaypay190activation.netlify.app/",
+  uri = "",
   title = "Complete Payment",
   onSuccess
 }) => {
@@ -75,57 +75,8 @@ const PaymentWebView: React.FC<PaymentWebViewProps> = ({
 
   if (!visible) return null;
 
-  return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="none"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.modalContainer, modalAnimatedStyle]}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={handlePaymentSuccess}>
-              <X size={24} color={Colors.light.text} />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.webContainer}>
-            {isLoading && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={Colors.light.primary} />
-                <Text style={styles.loadingText}>Loading payment portal...</Text>
-              </View>
-            )}
-            
-            {Platform.OS === 'web' ? (
-              <iframe
-                src={uri}
-                style={{
-                  border: 'none',
-                  width: '100%',
-                  height: '100%',
-                  display: isLoading ? 'none' : 'block'
-                }}
-                onLoad={handleIframeLoad}
-                title="Payment Portal"
-                allow="camera; microphone; payment"
-                sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
-              />
-            ) : (
-              // This would be a placeholder for mobile
-              <View style={styles.unsupportedContainer}>
-                <Text style={styles.unsupportedText}>
-                  This feature is only supported on web platforms.
-                </Text>
-              </View>
-            )}
-          </View>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
+  // Disable PaymentWebView completely to prevent external iframes
+  return null;
 };
 
 const styles = StyleSheet.create({
